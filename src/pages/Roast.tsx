@@ -4,7 +4,7 @@ import { BrutalButton } from "@/components/ui/brutal-button";
 import { BrutalInput } from "@/components/ui/brutal-input";
 import { BrutalTextarea } from "@/components/ui/brutal-textarea";
 import { BrutalCard, BrutalCardContent, BrutalCardHeader, BrutalCardTitle } from "@/components/ui/brutal-card";
-import { Download, Share2, ImageIcon, Flame, Skull, Heart, Lightbulb, PenLine } from "lucide-react";
+import { Download, Share2, ImageIcon, Flame, Skull, Heart, Lightbulb, PenLine, Target, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const roastLevels = [
@@ -16,8 +16,36 @@ const roastLevels = [
 const tabs = [
   { id: "roast", label: "Brutal Roast", icon: Skull },
   { id: "feedback", label: "Honest Feedback", icon: Heart },
+  { id: "competitors", label: "Competitor Reality Check", icon: Target },
   { id: "tips", label: "Survival Tips", icon: Lightbulb },
   { id: "rewrite", label: "Pitch Rewrite", icon: PenLine },
+];
+
+const competitorData = [
+  {
+    name: "Stripe",
+    description: "Payments infrastructure",
+    whyBetter: ["Massive trust", "Global reach", "Deep integrations"],
+    whyStruggle: ["No brand", "No money", "No partnerships"],
+  },
+  {
+    name: "Notion",
+    description: "All-in-one workspace",
+    whyBetter: ["Cult following", "Feature-rich", "Enterprise ready"],
+    whyStruggle: ["Late to market", "No differentiation", "Smaller team"],
+  },
+  {
+    name: "Figma",
+    description: "Collaborative design tool",
+    whyBetter: ["Industry standard", "Adobe backing", "Real-time collab"],
+    whyStruggle: ["No design cred", "Massive switching costs", "No community"],
+  },
+  {
+    name: "Slack",
+    description: "Team communication",
+    whyBetter: ["Network effects", "Integrations ecosystem", "Brand recognition"],
+    whyStruggle: ["Users hate change", "Enterprise contracts", "No distribution"],
+  },
 ];
 
 export default function Roast() {
@@ -73,6 +101,87 @@ Instead of: "${formData.description || "Your current pitch"}"
 Try: "We help [specific user] solve [specific problem] by [unique approach], resulting in [measurable outcome]. We've already [traction/validation]."
 
 Remember: Investors see 100 pitches a week. You have 30 seconds to not be forgettable.`,
+  };
+
+  const renderCompetitorCheck = () => {
+    if (!hasRoast) {
+      return (
+        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+          <div className="text-center">
+            <Target className="h-16 w-16 mx-auto mb-4 opacity-50" />
+            <p className="font-bold">No competitors found.</p>
+            <p className="text-sm mt-2">Which probably means nobody wants this.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <h3 className="text-xl font-bold flex items-center gap-2">
+          Who already killed your idea? 😈
+        </h3>
+
+        <div className="grid gap-4">
+          {competitorData.map((competitor, index) => (
+            <div
+              key={index}
+              className="bg-background border-4 border-foreground p-4"
+            >
+              <div className="mb-3">
+                <h4 className="text-lg font-bold">{competitor.name}</h4>
+                <p className="text-muted-foreground text-sm">{competitor.description}</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="font-bold text-sm mb-2">Why they're better:</p>
+                  <ul className="text-sm space-y-1">
+                    {competitor.whyBetter.map((point, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-primary">•</span>
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-bold text-sm mb-2">Why you'll struggle:</p>
+                  <ul className="text-sm space-y-1">
+                    {competitor.whyStruggle.map((point, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-accent">•</span>
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Warning Box */}
+        <div className="border-4 border-accent bg-background p-4">
+          <div className="flex items-center gap-2 font-bold text-accent">
+            <AlertTriangle className="h-5 w-5" />
+            Reality check: You're late to this market.
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-4">
+          <BrutalButton variant="outline" size="sm">
+            Find My Niche
+          </BrutalButton>
+          <BrutalButton variant="outline" size="sm">
+            Generate Pivot Ideas
+          </BrutalButton>
+          <BrutalButton variant="outline" size="sm">
+            Cry & Continue
+          </BrutalButton>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -202,7 +311,9 @@ Remember: Investors see 100 pitches a week. You have 30 seconds to not be forget
             </BrutalCardHeader>
             <BrutalCardContent>
               <div className="terminal-box min-h-[300px]">
-                {hasRoast ? (
+                {activeTab === "competitors" ? (
+                  renderCompetitorCheck()
+                ) : hasRoast ? (
                   <pre className="whitespace-pre-wrap text-primary text-sm leading-relaxed">
                     {placeholderContent[activeTab as keyof typeof placeholderContent]}
                   </pre>
@@ -230,6 +341,15 @@ Remember: Investors see 100 pitches a week. You have 30 seconds to not be forget
                 <BrutalButton variant="outline" size="sm" disabled={!hasRoast}>
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
+                </BrutalButton>
+                <BrutalButton 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={!hasRoast}
+                  onClick={() => setActiveTab("competitors")}
+                >
+                  <Target className="h-4 w-4 mr-2" />
+                  Reality Check
                 </BrutalButton>
               </div>
 

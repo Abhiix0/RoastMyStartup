@@ -59,18 +59,27 @@ export default function Index() {
       {/* Hero Section */}
       <section className="section-container py-20 lg:py-32">
         <div className="max-w-4xl mx-auto text-center">
-          <BrutalBadge variant="destructive" className="mb-6 inline-flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
-            Emotional Damage Guaranteed
-          </BrutalBadge>
+          <div className="flex flex-wrap justify-center gap-3 mb-6">
+            <BrutalBadge variant="destructive" className="inline-flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Emotional Damage Guaranteed
+            </BrutalBadge>
+            <BrutalBadge variant="default" className="inline-flex items-center gap-2">
+              🔥 NEW: Competitor Reality Check
+            </BrutalBadge>
+          </div>
 
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6">
             We destroy your startup idea{" "}
             <span className="bg-primary px-2">before investors do.</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-4 max-w-2xl mx-auto">
             Brutally honest AI feedback. No sugarcoating. No mercy.
+          </p>
+          
+          <p className="text-sm text-muted-foreground mb-10 max-w-xl mx-auto">
+            We tell you who already beat you.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
