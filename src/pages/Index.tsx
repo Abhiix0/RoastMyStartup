@@ -10,16 +10,22 @@ const testimonials = [
   {
     icon: "⭐⭐⭐⭐⭐",
     text: "This hurt. But it helped.",
+    name: "Sidharth TS",
+    initials: "ST",
     rotate: "1" as const,
   },
   {
     icon: "💀",
     text: "My co-founder cried.",
+    name: "Keertan K",
+    initials: "KK",
     rotate: "-1" as const,
   },
   {
     icon: "🔥",
     text: "Better than my mentor.",
+    name: "Vivek Vardhan",
+    initials: "VV",
     rotate: "2" as const,
   },
 ];
@@ -46,9 +52,9 @@ const steps = [
 ];
 
 const roastLevels = [
-  { name: "Soft Roast", emoji: "🌶️", description: "Constructive with a hint of sarcasm" },
-  { name: "Medium Roast", emoji: "🔥", description: "Honest feedback, no sugarcoating" },
-  { name: "Nuclear Roast", emoji: "☢️", description: "Prepare for emotional damage" },
+  { name: "Soft Roast", emoji: "🌶️", description: "We’ll gently poke holes in your idea and help you improve without crushing your spirit." },
+  { name: "Medium Roast", emoji: "🔥", description: "Expect blunt truths, real flaws, and practical advice. This is where most founders should start." },
+  { name: "Nuclear Roast", emoji: "☢️", description: "Prepare for emotional damage. We dismantle your idea piece by piece. Survivors come out stronger. Others pivot." },
 ];
 
 export default function Index() {
@@ -56,64 +62,74 @@ export default function Index() {
 
   return (
     <PageLayout>
-      {/* Hero Section */}
-      <section className="section-container py-20 lg:py-32">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex flex-wrap justify-center gap-3 mb-6">
-            <BrutalBadge variant="destructive" className="inline-flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Emotional Damage Guaranteed
-            </BrutalBadge>
-            <BrutalBadge variant="default" className="inline-flex items-center gap-2">
-              🔥 NEW: Competitor Reality Check
-            </BrutalBadge>
-          </div>
+      {/* Hero + Testimonials Wrapper with Background */}
+      <section 
+        className="hero-testimonial-wrapper relative bg-cover bg-no-repeat bg-top md:bg-cover sm:bg-contain"
+        style={{
+          backgroundImage: 'url(/banner_void_2.svg)',
+        }}
+      >
+        {/* Hero Section */}
+        <div className="section-container py-14 lg:py-24">
+          <div className="max-w-4xl mx-auto text-center relative z-10">
+            <div className="flex flex-wrap justify-center gap-3 mb-5">
+              <BrutalBadge variant="destructive" className="inline-flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Emotional Damage Guaranteed
+              </BrutalBadge>
+              <BrutalBadge variant="default" className="inline-flex items-center gap-2">
+                🔥 NEW: Competitor Reality Check
+              </BrutalBadge>
+            </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6">
-            We destroy your startup idea{" "}
-            <span className="bg-primary px-2">before investors do.</span>
-          </h1>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-snug mb-5">
+              We destroy your startup idea{" "}
+              <span className="bg-primary px-2 py-0 leading-none inline-block">before investors do.</span>
+            </h1>
 
-          <p className="text-xl md:text-2xl text-muted-foreground mb-4 max-w-2xl mx-auto">
-            Brutally honest AI feedback. No sugarcoating. No mercy.
-          </p>
-          
-          <p className="text-sm text-muted-foreground mb-10 max-w-xl mx-auto">
-            We tell you who already beat you.
-          </p>
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Brutally honest AI feedback. No sugarcoating. No mercy.
+            </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/roast">
-              <BrutalButton size="xl" className="w-full sm:w-auto">
-                ROAST MY IDEA
-                <Flame className="ml-2 h-6 w-6" />
-              </BrutalButton>
-            </Link>
-            <Link to="/about">
-              <BrutalButton variant="outline" size="xl" className="w-full sm:w-auto">
-                Learn More
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </BrutalButton>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/roast">
+                <BrutalButton size="xl" className="w-full sm:w-auto">
+                  ROAST MY IDEA
+                  <Flame className="ml-2 h-6 w-6" />
+                </BrutalButton>
+              </Link>
+              <Link to="/about">
+                <BrutalButton variant="outline" size="xl" className="w-full sm:w-auto">
+                  Learn More
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </BrutalButton>
+              </Link>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Social Proof */}
-      <section className="bg-muted border-y-4 border-foreground py-16">
-        <div className="section-container">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            What founders are saying 💀
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <BrutalCard key={index} rotate={testimonial.rotate}>
-                <BrutalCardContent className="text-center py-8">
-                  <p className="text-5xl mb-4">{testimonial.icon}</p>
-                  <p className="text-lg font-bold">"{testimonial.text}"</p>
-                </BrutalCardContent>
-              </BrutalCard>
-            ))}
+        {/* Social Proof */}
+        <div className="bg-muted border-y-4 border-foreground py-16" style={{ backgroundColor: 'rgba(245, 245, 245, 0.85)' }}>
+          <div className="section-container">
+            <h2 className="text-3xl font-bold text-center mb-12">
+              What founders are saying 💀
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {testimonials.map((testimonial, index) => (
+                <BrutalCard key={index} rotate={testimonial.rotate}>
+                  <BrutalCardContent className="text-center py-8">
+                    <p className="text-5xl mb-4">{testimonial.icon}</p>
+                    <p className="text-lg font-bold mb-4">"{testimonial.text}"</p>
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-12 h-12 bg-muted border-4 border-foreground rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold">{testimonial.initials}</span>
+                      </div>
+                      <p className="text-sm font-semibold">{testimonial.name}</p>
+                    </div>
+                  </BrutalCardContent>
+                </BrutalCard>
+              ))}
+            </div>
           </div>
         </div>
       </section>

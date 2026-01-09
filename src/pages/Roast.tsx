@@ -342,15 +342,6 @@ Remember: Investors see 100 pitches a week. You have 30 seconds to not be forget
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </BrutalButton>
-                <BrutalButton 
-                  variant="outline" 
-                  size="sm" 
-                  disabled={!hasRoast}
-                  onClick={() => setActiveTab("competitors")}
-                >
-                  <Target className="h-4 w-4 mr-2" />
-                  Reality Check
-                </BrutalButton>
               </div>
 
               {hasRoast && (
