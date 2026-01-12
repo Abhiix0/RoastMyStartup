@@ -18,7 +18,7 @@ export interface RoastResponse {
   survival_tips: string[];
 }
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://roast-my-startup-api.onrender.com";
 
 /**
  * Generate a roast for a startup idea
