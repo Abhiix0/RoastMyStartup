@@ -1,8 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { BrutalButton } from "@/components/ui/brutal-button";
-import { Flame, Menu, X, User, LogOut } from "lucide-react";
+import { Flame, Menu, X } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -14,7 +13,6 @@ const navLinks = [
 export function Navbar() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
 
   return (
     <nav className="bg-background border-b-4 border-foreground sticky top-0 z-50">
@@ -44,38 +42,7 @@ export function Navbar() {
           </div>
 
           {/* CTA Button */}
-          <div className="hidden md:flex items-center gap-2">
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-2 border-4 border-foreground bg-muted">
-                  {user?.picture ? (
-                    <img 
-                      src={user.picture} 
-                      alt={user.name} 
-                      className="w-6 h-6 rounded-full"
-                    />
-                  ) : (
-                    <User className="w-5 h-5" />
-                  )}
-                  <span className="font-bold text-sm">{user?.name}</span>
-                </div>
-                <BrutalButton
-                  onClick={logout}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </BrutalButton>
-              </div>
-            ) : (
-              <Link to="/signin">
-                <BrutalButton variant="outline" size="sm">
-                  Sign In
-                </BrutalButton>
-              </Link>
-            )}
+          <div className="hidden md:block">
             <Link to="/roast">
               <BrutalButton size="sm">
                 ROAST ME 🔥
@@ -111,40 +78,7 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <div className="p-4 space-y-2">
-              {isAuthenticated ? (
-                <>
-                  <div className="flex items-center gap-2 p-3 border-4 border-foreground bg-muted mb-2">
-                    {user?.picture ? (
-                      <img 
-                        src={user.picture} 
-                        alt={user.name} 
-                        className="w-6 h-6 rounded-full"
-                      />
-                    ) : (
-                      <User className="w-5 h-5" />
-                    )}
-                    <span className="font-bold text-sm">{user?.name}</span>
-                  </div>
-                  <BrutalButton
-                    onClick={() => {
-                      logout();
-                      setMobileMenuOpen(false);
-                    }}
-                    variant="outline"
-                    className="w-full flex items-center justify-center gap-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </BrutalButton>
-                </>
-              ) : (
-                <Link to="/signin" onClick={() => setMobileMenuOpen(false)}>
-                  <BrutalButton variant="outline" className="w-full">
-                    Sign In
-                  </BrutalButton>
-                </Link>
-              )}
+            <div className="p-4">
               <Link to="/roast" onClick={() => setMobileMenuOpen(false)}>
                 <BrutalButton className="w-full">
                   ROAST ME 🔥
