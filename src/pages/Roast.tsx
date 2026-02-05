@@ -4,9 +4,10 @@ import { RetroUIButton } from "@/components/retroui/button";
 import { RetroUIInput } from "@/components/retroui/input";
 import { RetroUITextarea } from "@/components/retroui/textarea";
 import { RetroUICard, RetroUICardContent, RetroUICardHeader, RetroUICardTitle } from "@/components/retroui/card";
-import { Download, Share2, ImageIcon, Flame, Skull, Heart, Lightbulb, PenLine, Target } from "lucide-react";
+import { Download, Share2, ImageIcon, Flame, Skull, Heart, Lightbulb, PenLine, Target, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { generateRoast, type RoastResponse } from "@/lib/api";
+import { hasReachedRoastLimit, incrementRoastCount, getCurrentUser } from "@/lib/auth";
 import { 
   Drawer, 
   DrawerClose, 
@@ -47,6 +48,12 @@ export default function Roast() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isResultReady, setIsResultReady] = useState(false);
+  const [showLimitWarning, setShowLimitWarning] = useState(false);
+
+  const user = getCurrentUser();
+  const hasReachedLimit = hasReachedRoastLimit();
 
   // Check if form is valid
   const checkFormValidity = () => {
@@ -71,14 +78,75 @@ export default function Roast() {
     setIsFormValid(isValid);
   };
 
+  // Clear all form fields
+  const handleClearForm = () => {
+    setFormData({
+      startupName: "",
+      description: "",
+      targetUsers: "",
+      budget: "",
+      roastLevel: "medium",
+    });
+    setIsFormValid(false);
+    setRoastData(null);
+    setError(null);
+    setActiveTab("roast");
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if user has reached roast limit
+    if (hasReachedLimit) {
+      setShowLimitWarning(true);
+      return;
+    }
+    
     checkFormValidity();
   };
 
   const handleRoastGeneration = async () => {
+    // Double-check limit before generating
+    if (hasReachedLimit) {
+      setShowLimitWarning(true);
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    setLoadingProgress(0);
+    setIsResultReady(false);
+
+    // Animate progress bar with honest progression
+    const animateProgress = () => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        setLoadingProgress((currentProgress) => {
+          // Don't go beyond 99% until result is ready
+          if (currentProgress >= 99) {
+            return 99;
+          }
+
+          if (currentProgress < 80) {
+            // Fast progress from 0 to 80%
+            progress = currentProgress + (Math.random() * 6 + 3); // Random increment between 3-9
+            return Math.min(progress, 80);
+          } else if (currentProgress < 90) {
+            // Slow down from 80 to 90%
+            progress = currentProgress + (Math.random() * 1.5 + 0.5); // Random increment between 0.5-2
+            return Math.min(progress, 90);
+          } else {
+            // Very slow from 90 to 99%
+            progress = currentProgress + (Math.random() * 0.5 + 0.2); // Random increment between 0.2-0.7
+            return Math.min(progress, 99);
+          }
+        });
+      }, 200);
+      
+      return interval;
+    };
+
+    const progressInterval = animateProgress();
 
     try {
       // Map roast level from form format to API format
@@ -96,12 +164,28 @@ export default function Roast() {
         roast_level: roastLevelMap[formData.roastLevel] || "Medium",
       });
 
+      // API response received - mark result as ready
+      setIsResultReady(true);
       setRoastData(response);
+      
+      // Increment roast count (temporary - backend will handle this)
+      incrementRoastCount();
+      
+      // Now complete the progress to 100%
+      setLoadingProgress(100);
+      
+      // Immediately stop loading (no artificial delay)
+      clearInterval(progressInterval);
+      setLoading(false);
+      setLoadingProgress(0);
+      
     } catch (err) {
+      clearInterval(progressInterval);
       setError(err instanceof Error ? err.message : "Failed to generate roast");
       console.error("Roast generation error:", err);
-    } finally {
       setLoading(false);
+      setLoadingProgress(0);
+      setIsResultReady(false);
     }
   };
 
@@ -207,10 +291,35 @@ export default function Roast() {
           {/* Form Panel */}
           <RetroUICard>
             <RetroUICardHeader>
-              <RetroUICardTitle className="flex items-center gap-2">
-                <Flame className="h-6 w-6" />
-                Your Startup Details
-              </RetroUICardTitle>
+              <div className="flex items-center justify-between w-full">
+                <RetroUICardTitle className="flex items-center gap-2">
+                  <Flame className="h-6 w-6" />
+                  Your Startup Details
+                </RetroUICardTitle>
+                <RetroUIButton
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearForm}
+                  className="text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Clear
+                </RetroUIButton>
+              </div>
+              {/* Usage Indicator */}
+              {user && (
+                <div className="mt-3 text-sm">
+                  <span className="font-medium">
+                    Roasts remaining: <span className="font-bold">{6 - user.roastCount} / 6</span>
+                  </span>
+                  {hasReachedLimit && (
+                    <span className="ml-2 text-muted-foreground">
+                      (Limit reached)
+                    </span>
+                  )}
+                </div>
+              )}
             </RetroUICardHeader>
             <RetroUICardContent>
               <form onSubmit={handleFormSubmit} className="space-y-6">
@@ -367,17 +476,46 @@ export default function Roast() {
               </div>
             </RetroUICardHeader>
             <RetroUICardContent>
-              <div className="terminal-box min-h-[300px]">
+              <div className={`terminal-box min-h-[300px] transition-opacity duration-200 ${loading ? 'opacity-100' : 'opacity-100'}`}>
                 {loading ? (
-                  <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                    <div className="text-center">
-                      <Flame className="h-16 w-16 mx-auto mb-4 opacity-50 animate-pulse" />
-                      <p className="font-bold">Generating your roast...</p>
-                      <p className="text-sm mt-2">This may take a moment</p>
+                  <div className="flex items-center justify-center h-[300px]">
+                    <div className="w-full max-w-md px-6">
+                      <div className="text-center mb-6">
+                        <Flame className="h-12 w-12 mx-auto mb-3 text-yellow-400 animate-pulse" />
+                        <p className="font-bold text-xl mb-2 text-white">Preparing emotional damage...</p>
+                        <p className="text-sm text-gray-300 font-medium">This won't take long</p>
+                      </div>
+                      
+                      {/* Animated Progress Bar */}
+                      <div className="relative">
+                        <div className="w-full h-8 bg-gray-800 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                          <div 
+                            className="h-full bg-yellow-400 transition-all duration-200 ease-out flex items-center justify-end pr-2"
+                            style={{ width: `${loadingProgress}%` }}
+                          >
+                            {loadingProgress > 15 && (
+                              <span className="text-xs font-bold text-black">
+                                {Math.round(loadingProgress)}%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mt-3 text-center">
+                          <span className="text-sm font-semibold text-gray-200">
+                            {loadingProgress < 30 && "Analyzing your idea..."}
+                            {loadingProgress >= 30 && loadingProgress < 60 && "Finding flaws..."}
+                            {loadingProgress >= 60 && loadingProgress < 85 && "Crafting brutal honesty..."}
+                            {loadingProgress >= 85 && loadingProgress < 99 && "Almost done..."}
+                            {loadingProgress >= 99 && "Finalizing roast..."}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : roastData ? (
-                  renderContent()
+                  <div className="animate-in fade-in duration-300">
+                    {renderContent()}
+                  </div>
                 ) : (
                   <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                     <div className="text-center">
@@ -391,17 +529,17 @@ export default function Roast() {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-3 sm:gap-4 mt-6">
-                <RetroUIButton variant="outline" size="sm" disabled={!roastData} className="flex-1 sm:flex-none text-xs sm:text-sm">
+                <RetroUIButton variant="outline" size="sm" disabled className="flex-1 sm:flex-none text-xs sm:text-sm">
                   <ImageIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Generate Meme</span>
                   <span className="sm:hidden">Meme</span>
                 </RetroUIButton>
-                <RetroUIButton variant="outline" size="sm" disabled={!roastData} className="flex-1 sm:flex-none text-xs sm:text-sm">
+                <RetroUIButton variant="outline" size="sm" disabled className="flex-1 sm:flex-none text-xs sm:text-sm">
                   <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Download PDF</span>
                   <span className="sm:hidden">PDF</span>
                 </RetroUIButton>
-                <RetroUIButton variant="outline" size="sm" disabled={!roastData} className="flex-1 sm:flex-none text-xs sm:text-sm">
+                <RetroUIButton variant="outline" size="sm" disabled className="flex-1 sm:flex-none text-xs sm:text-sm">
                   <Share2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Share
                 </RetroUIButton>
@@ -423,6 +561,48 @@ export default function Roast() {
           </RetroUICard>
         </div>
       </section>
+
+      {/* Roast Limit Warning Drawer */}
+      <Drawer open={showLimitWarning} onOpenChange={setShowLimitWarning}>
+        <DrawerContent className="border-2 border-foreground [&>div:first-child]:hidden">
+          {/* Custom handle - black, centered, properly positioned */}
+          <div className="mx-auto mt-4 h-1 w-[100px] rounded-full bg-foreground" />
+          
+          <DrawerHeader className="text-center px-6 py-8">
+            <DrawerTitle className="text-2xl font-bold mb-6 text-center">
+              🔒 Roast limit reached
+            </DrawerTitle>
+            <DrawerDescription className="text-lg mb-4 max-w-md mx-auto text-center">
+              You've used all 6 free roasts.
+              <br />
+              That's enough emotional damage for now.
+            </DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter className="px-6 pb-8">
+            <div className="flex flex-col gap-3 justify-center items-center">
+              <RetroUIButton 
+                onClick={() => {
+                  setShowLimitWarning(false);
+                  navigate("/pricing");
+                }}
+                size="lg"
+              >
+                Upgrade Your Plan
+              </RetroUIButton>
+              <RetroUIButton 
+                variant="outline" 
+                size="lg"
+                onClick={() => {
+                  setShowLimitWarning(false);
+                  navigate("/pricing");
+                }}
+              >
+                View Pricing
+              </RetroUIButton>
+            </div>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </PageLayout>
   );
 }

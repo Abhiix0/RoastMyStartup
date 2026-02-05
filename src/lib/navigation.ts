@@ -22,6 +22,22 @@ export function getRoastNavigationPath(): string {
 }
 
 /**
+ * Get the navigation path for pricing CTAs based on auth state
+ * If user is authenticated, returns /dashboard
+ * If not authenticated, returns /auth/login with redirect parameter
+ * 
+ * @returns Navigation path string
+ */
+export function getPricingCTAPath(): string {
+  if (isAuthenticated()) {
+    return "/dashboard";
+  }
+  
+  // Not authenticated - redirect to login
+  return "/auth/login";
+}
+
+/**
  * Navigate to roast page with auth check
  * This is a helper for programmatic navigation
  * 

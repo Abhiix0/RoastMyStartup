@@ -3,10 +3,10 @@ import { Flame, History, Image, CreditCard, Settings, ChevronLeft, ChevronRight 
 import { useState } from "react";
 
 const sidebarLinks = [
-  { href: "/dashboard", label: "Roast History", icon: History },
-  { href: "/dashboard/memes", label: "Saved Memes", icon: Image },
-  { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard", label: "Roast History", icon: History, disabled: false },
+  { href: "/dashboard/memes", label: "Saved Memes", icon: Image, disabled: true },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard, disabled: true },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings, disabled: true },
 ];
 
 export function DashboardSidebar() {
@@ -44,6 +44,18 @@ export function DashboardSidebar() {
         {sidebarLinks.map((link) => {
           const Icon = link.icon;
           const isActive = location.pathname === link.href;
+
+          if (link.disabled) {
+            return (
+              <div
+                key={link.href}
+                className="flex items-center gap-3 px-4 py-3 font-bold text-sm text-muted-foreground opacity-50 cursor-not-allowed"
+              >
+                <Icon className="h-5 w-5 flex-shrink-0" />
+                {!collapsed && <span>{link.label}</span>}
+              </div>
+            );
+          }
 
           return (
             <Link

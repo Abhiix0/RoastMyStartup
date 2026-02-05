@@ -8,7 +8,7 @@ import { Share2, RotateCcw, Zap, Quote } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import type { RoastResponse } from "@/lib/api";
-import { getRoastNavigationPath } from "@/lib/navigation";
+import { getRoastNavigationPath, getPricingCTAPath } from "@/lib/navigation";
 
 // Generate random score between min and max
 const generateRandomScore = (min: number, max: number): number => {
@@ -212,7 +212,7 @@ export default function Result() {
               Try Again
             </RetroUIButton>
           </Link>
-          <Link to="/pricing" className="w-full sm:w-auto">
+          <Link to={getPricingCTAPath()} className="w-full sm:w-auto">
             <RetroUIButton variant="secondary" size="lg" className="w-full">
               <Zap className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Upgrade for More

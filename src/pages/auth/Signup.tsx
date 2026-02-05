@@ -117,12 +117,7 @@ const Signup = () => {
                   />
                 </div>
 
-                {/* Disclaimer */}
-                <div className="bg-yellow-400 border-2 border-black p-3 retroui-shadow">
-                  <p className="text-xs font-bold text-center">
-                    We do not validate feelings. Only ideas.
-                  </p>
-                </div>
+
 
                 <RetroUIButton
                   variant="default"
