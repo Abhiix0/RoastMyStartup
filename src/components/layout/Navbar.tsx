@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/roast", label: "Get Roasted" },
+  { href: "/auth/login", label: "Get Roasted" },
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
 ];
@@ -44,8 +44,13 @@ export function Navbar() {
 
           {/* CTA Button */}
           <div className="hidden md:block">
+<<<<<<< Updated upstream
             <Link to="/roast">
               <RetroUIButton size="sm" className="text-sm lg:text-base">
+=======
+            <Link to="/auth/login">
+              <RetroUIButton size="sm">
+>>>>>>> Stashed changes
                 ROAST ME 🔥
               </RetroUIButton>
             </Link>
@@ -80,7 +85,7 @@ export function Navbar() {
               </Link>
             ))}
             <div className="p-4">
-              <Link to="/roast" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/auth/login" onClick={() => setMobileMenuOpen(false)}>
                 <RetroUIButton className="w-full">
                   ROAST ME 🔥
                 </RetroUIButton>

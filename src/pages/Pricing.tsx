@@ -9,6 +9,7 @@ import {
   AccordionItem, 
   AccordionTrigger 
 } from "@/components/ui/accordion";
+import { useNavigate } from "react-router-dom";
 
 const plans = [
   {
@@ -63,6 +64,8 @@ const faqs = [
 ];
 
 export default function Pricing() {
+  const navigate = useNavigate();
+
   return (
     <PageLayout>
       <section className="section-container py-12 sm:py-16 md:py-20">
@@ -80,7 +83,7 @@ export default function Pricing() {
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto mb-12 sm:mb-16 md:mb-20">
           {plans.map((plan) => (
-            <PricingCard key={plan.name} {...plan} />
+            <PricingCard key={plan.name} {...plan} onSelect={() => navigate("/auth/login")} />
           ))}
         </div>
 

@@ -23,7 +23,7 @@ export function Footer() {
             <h4 className="font-bold text-base sm:text-lg mb-3 sm:mb-4">Product</h4>
             <ul className="space-y-2 text-sm sm:text-base">
               <li>
-                <Link to="/roast" className="hover:text-yellow-400 transition-colors">
+                <Link to="/auth/login" className="hover:text-yellow-400 transition-colors">
                   Get Roasted
                 </Link>
               </li>
