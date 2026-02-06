@@ -64,13 +64,15 @@ def validate_oauth_config():
         raise ValueError(error_msg)
 
 
-def create_jwt_token(email: str, name: str) -> str:
+def create_jwt_token(user_id: str, email: str, name: str, provider: str = "google") -> str:
     """
     Create a JWT token for an authenticated user
     
     Args:
+        user_id: User's UUID from database
         email: User's email address
         name: User's full name
+        provider: OAuth provider
         
     Returns:
         JWT token string
@@ -78,8 +80,10 @@ def create_jwt_token(email: str, name: str) -> str:
     expiration = datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
     
     payload = {
+        "user_id": user_id,
         "email": email,
         "name": name,
+        "provider": provider,
         "exp": expiration
     }
     
@@ -130,7 +134,7 @@ async def google_login():
 
 
 @router.get("/google/callback")
-async def google_callback(code: Optional[str] = None, error: Optional[str] = None):
+async def google_callback(request: Request, code: Optional[str] = None, error: Optional[str] = None):
     """
     Handle Google OAuth callback
     
@@ -201,16 +205,41 @@ async def google_callback(code: Optional[str] = None, error: Optional[str] = Non
         user_info = userinfo_response.json()
         email = user_info.get("email")
         name = user_info.get("name", "")
+        provider_id = user_info.get("id")
+        picture = user_info.get("picture")
         
-        if not email:
-            logger.error("No email in user info response")
+        if not email or not provider_id:
+            logger.error("No email or provider ID in user info response")
             error_url = f"{FRONTEND_CALLBACK_URL}?error=no_email"
             return RedirectResponse(url=error_url)
         
-        logger.info(f"Successfully authenticated user: {email}")
+        logger.info(f"Successfully authenticated user: {email} (provider_id: {provider_id})")
+        
+        # Persist user to database (upsert to handle returning users)
+        try:
+            from app.services.db_service import db_service
+            user_id = db_service.upsert_user(
+                email=email, 
+                name=name, 
+                provider_id=provider_id,
+                picture=picture,
+                provider="google"
+            )
+            logger.info(f"User {email} persisted to database with ID: {user_id}")
+            
+            # Log the login event
+            db_service.log_login_event(
+                user_id=user_id,
+                provider="google",
+                ip_address=request.client.host if hasattr(request, 'client') else None,
+                user_agent=request.headers.get("user-agent")
+            )
+        except Exception as db_error:
+            # Log but don't block login if DB fails
+            logger.error(f"Failed to persist user {email} to database: {str(db_error)}")
         
         # Generate JWT token
-        jwt_token = create_jwt_token(email=email, name=name)
+        jwt_token = create_jwt_token(user_id=user_id, email=email, name=name, provider="google")
         
         # Redirect to frontend with token
         callback_url = f"{FRONTEND_CALLBACK_URL}?token={jwt_token}"

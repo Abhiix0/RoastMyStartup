@@ -1,6 +1,8 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+import jwt
+from typing import Optional
 
 from app.schemas.roast import RoastRequest, RoastResponse
 from app.services.roast_service import roast_service
@@ -72,7 +74,7 @@ async def get_stats():
         )
 
 @app.post("/roast", response_model=RoastResponse)
-async def roast_startup(request: RoastRequest):
+async def roast_startup(request: RoastRequest, authorization: Optional[str] = Header(None)):
     """
     Roast a startup idea with brutal honesty and constructive feedback.
     
@@ -87,9 +89,31 @@ async def roast_startup(request: RoastRequest):
     
     The endpoint includes automatic retry logic for API failures, robust
     error handling, and non-blocking database persistence.
+    
+    If user is authenticated (JWT token in Authorization header), the roast
+    will be linked to their user account.
     """
     try:
         logger.info(f"Processing roast request for: {request.startup_name}")
+        
+        # Extract user_id from JWT token if present
+        user_id = None
+        if authorization and authorization.startswith("Bearer "):
+            try:
+                token = authorization.replace("Bearer ", "")
+                payload = jwt.decode(
+                    token, 
+                    settings.jwt_secret_key or "dummy_key",  # Fallback for when JWT not configured
+                    algorithms=[settings.jwt_algorithm]
+                )
+                user_id = payload.get("user_id")
+                logger.info(f"Authenticated user_id: {user_id}")
+            except jwt.ExpiredSignatureError:
+                logger.warning("JWT token expired - proceeding as anonymous user")
+            except jwt.InvalidTokenError as e:
+                logger.warning(f"Invalid JWT token: {str(e)} - proceeding as anonymous user")
+            except Exception as e:
+                logger.warning(f"JWT decode error: {str(e)} - proceeding as anonymous user")
         
         # Generate the roast using Gemini AI with retry logic
         roast_response = await roast_service.analyze_startup(request)
@@ -98,7 +122,7 @@ async def roast_startup(request: RoastRequest):
         
         # Save to database in the background (fail-safe - don't block user response)
         try:
-            db_result = db_service.save_roast(request, roast_response)
+            db_result = db_service.save_roast(request, roast_response, user_id=user_id)
             if db_result:
                 logger.info(f"✅ Roast for {request.startup_name} saved to database")
             else:
