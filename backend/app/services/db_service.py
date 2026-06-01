@@ -74,54 +74,6 @@ class DatabaseService:
             logger.error(f"❌ Failed to upsert user {email}: {str(e)}")
             return None
     
-    def upsert_user(self, email: str, name: str, provider_id: str, picture: Optional[str] = None, provider: str = "google") -> Optional[str]:
-        """
-        Create or update a user in the database (idempotent operation)
-        
-        Args:
-            email: User's email address
-            name: User's full name
-            provider_id: Provider's unique user ID (required)
-            picture: User's profile picture URL (optional)
-            provider: OAuth provider (default: "google")
-            
-        Returns:
-            str: The user's ID if successful, None if failed
-            
-        Note:
-            Uses upsert to handle both new users and returning users.
-            Unique constraint is (provider_id, provider) composite key.
-        """
-        try:
-            user_data = {
-                "provider_id": provider_id,
-                "email": email,
-                "name": name,
-                "picture": picture,
-                "provider": provider,
-                "last_login": datetime.utcnow().isoformat(),
-            }
-            
-            logger.info(f"Upserting user to database: {email} (provider: {provider}, provider_id: {provider_id})")
-            
-            # Upsert: insert if new, update if exists (based on provider_id + provider uniqueness)
-            result = self.supabase.table("users").upsert(
-                user_data,
-                on_conflict="provider_id,provider"
-            ).execute()
-            
-            if result.data:
-                user_id = result.data[0].get("id")
-                logger.info(f"✅ User {email} upserted successfully with ID: {user_id}")
-                return user_id
-            else:
-                logger.error(f"❌ No data returned from user upsert for {email}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"❌ Failed to upsert user {email}: {str(e)}")
-            return None
-    
     def log_login_event(self, user_id: str, provider: str, ip_address: Optional[str] = None, user_agent: Optional[str] = None) -> None:
         """
         Log a login event for audit trail

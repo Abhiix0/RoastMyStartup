@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+import os
 import jwt
 from typing import Optional
 
@@ -24,7 +25,11 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://localhost:3000", "*"],  # Allow frontend origins
+    allow_origins=[
+        "http://localhost:8080",
+        "http://localhost:3000",
+        os.getenv("FRONTEND_BASE_URL", "http://localhost:8080"),
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

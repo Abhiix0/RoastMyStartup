@@ -2,6 +2,8 @@
  * API client for RoastMyStartup backend
  */
 
+import { getAuthToken } from "./auth";
+
 export interface RoastRequest {
   startup_name: string;
   idea_description: string;
@@ -36,11 +38,17 @@ export const OAUTH_ENDPOINTS = {
 export async function generateRoast(
   request: RoastRequest
 ): Promise<RoastResponse> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${API_BASE_URL}/roast`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify(request),
   });
 
