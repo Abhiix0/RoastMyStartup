@@ -120,6 +120,16 @@ async def roast_startup(request: RoastRequest, authorization: Optional[str] = He
             except Exception as e:
                 logger.warning(f"JWT decode error: {str(e)} - proceeding as anonymous user")
         
+        # Enforce per-user roast limit server-side
+        FREE_ROAST_LIMIT = 6
+        if user_id:
+            roast_count = db_service.get_user_roast_count(user_id)
+            if roast_count >= FREE_ROAST_LIMIT:
+                raise HTTPException(
+                    status_code=403,
+                    detail="You have reached your free roast limit of 6. Please upgrade to continue."
+                )
+
         # Generate the roast using Gemini AI with retry logic
         roast_response = await roast_service.analyze_startup(request)
         

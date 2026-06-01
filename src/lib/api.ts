@@ -20,7 +20,7 @@ export interface RoastResponse {
   survival_tips: string[];
 }
 
-const API_BASE_URL = "https://roast-my-startup-api.onrender.com";
+export const API_BASE_URL = "https://roast-my-startup-api.onrender.com";
 
 /**
  * OAuth endpoints

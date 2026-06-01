@@ -16,7 +16,6 @@ import {
   DrawerFooter, 
   DrawerHeader, 
   DrawerTitle, 
-  DrawerTrigger 
 } from "@/components/ui/drawer";
 
 const roastLevels = [
@@ -51,19 +50,10 @@ export default function Roast() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isResultReady, setIsResultReady] = useState(false);
   const [showLimitWarning, setShowLimitWarning] = useState(false);
+  const [showConfirmDrawer, setShowConfirmDrawer] = useState(false);
 
   const user = getCurrentUser();
   const hasReachedLimit = hasReachedRoastLimit();
-
-  // Check if form is valid
-  const checkFormValidity = () => {
-    const isValid = formData.startupName.trim() !== "" && 
-                   formData.description.trim() !== "" && 
-                   formData.targetUsers.trim() !== "" && 
-                   formData.budget.trim() !== "";
-    setIsFormValid(isValid);
-    return isValid;
-  };
 
   // Helper function to update form data and check validity
   const updateFormData = (updates: Partial<typeof formData>) => {
@@ -95,14 +85,10 @@ export default function Roast() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check if user has reached roast limit
     if (hasReachedLimit) {
       setShowLimitWarning(true);
       return;
     }
-    
-    checkFormValidity();
   };
 
   const handleRoastGeneration = async () => {
@@ -395,54 +381,22 @@ export default function Roast() {
                   </div>
                 </div>
 
-                <Drawer>
-                  <DrawerTrigger asChild>
-                    <RetroUIButton 
-                      type="submit" 
-                      size="lg" 
-                      className="w-full" 
-                      disabled={loading || !isFormValid}
-                    >
-                      {loading ? "ROASTING..." : "ROAST ME 😈"}
-                    </RetroUIButton>
-                  </DrawerTrigger>
-                  <DrawerContent className="border-2 border-foreground [&>div:first-child]:hidden">
-                    {/* Custom handle - black, centered, properly positioned */}
-                    <div className="mx-auto mt-4 h-1 w-[100px] rounded-full bg-foreground" />
-                    
-                    <DrawerHeader className="text-center px-6 py-8">
-                      <DrawerTitle className="text-2xl font-bold mb-6 text-center">
-                        ⚠️ Are you absolutely sure?
-                      </DrawerTitle>
-                      <DrawerDescription className="text-lg mb-4 max-w-md mx-auto text-center text-justify">
-                        You're about to receive unfiltered, brutally honest feedback on your startup. 
-                        This is not validation. This is not encouragement. Some lines may sting. 
-                        Some may hurt a lot.
-                      </DrawerDescription>
-                      <p className="text-sm text-muted-foreground text-center">
-                        Once you proceed, there's no undo. Screenshots last forever.
-                      </p>
-                    </DrawerHeader>
-                    <DrawerFooter className="px-6 pb-8">
-                      <div className="flex gap-4 justify-center items-center">
-                        <DrawerClose asChild>
-                          <RetroUIButton 
-                            onClick={handleRoastGeneration}
-                            size="lg"
-                            disabled={loading}
-                          >
-                            🔥 Roast Me Anyway
-                          </RetroUIButton>
-                        </DrawerClose>
-                        <DrawerClose asChild>
-                          <RetroUIButton variant="outline" size="lg">
-                            😌 I'm Not Ready Yet
-                          </RetroUIButton>
-                        </DrawerClose>
-                      </div>
-                    </DrawerFooter>
-                  </DrawerContent>
-                </Drawer>
+                <RetroUIButton
+                  type="button"
+                  size="lg"
+                  className="w-full"
+                  disabled={loading || !isFormValid}
+                  onClick={() => {
+                    if (hasReachedLimit) {
+                      setShowLimitWarning(true);
+                      return;
+                    }
+                    setShowConfirmDrawer(true);
+                  }}
+                >
+                  {loading ? "ROASTING..." : "ROAST ME 😈"}
+                </RetroUIButton>
+
                 {error && (
                   <div className="bg-destructive/10 border-2 border-destructive p-4 text-destructive font-bold">
                     {error}
@@ -562,12 +516,48 @@ export default function Roast() {
         </div>
       </section>
 
+      {/* Confirmation Drawer */}
+      <Drawer open={showConfirmDrawer} onOpenChange={setShowConfirmDrawer}>
+        <DrawerContent className="border-2 border-foreground [&>div:first-child]:hidden">
+          <div className="mx-auto mt-4 h-1 w-[100px] rounded-full bg-foreground" />
+          <DrawerHeader className="text-center px-6 py-8">
+            <DrawerTitle className="text-2xl font-bold mb-6 text-center">
+              ⚠️ Are you absolutely sure?
+            </DrawerTitle>
+            <DrawerDescription className="text-lg mb-4 max-w-md mx-auto text-center text-justify">
+              You're about to receive unfiltered, brutally honest feedback on your startup.
+              This is not validation. This is not encouragement. Some lines may sting.
+              Some may hurt a lot.
+            </DrawerDescription>
+            <p className="text-sm text-muted-foreground text-center">
+              Once you proceed, there's no undo. Screenshots last forever.
+            </p>
+          </DrawerHeader>
+          <DrawerFooter className="px-6 pb-8">
+            <div className="flex gap-4 justify-center items-center">
+              <DrawerClose asChild>
+                <RetroUIButton
+                  onClick={handleRoastGeneration}
+                  size="lg"
+                  disabled={loading}
+                >
+                  🔥 Roast Me Anyway
+                </RetroUIButton>
+              </DrawerClose>
+              <DrawerClose asChild>
+                <RetroUIButton variant="outline" size="lg">
+                  😌 I'm Not Ready Yet
+                </RetroUIButton>
+              </DrawerClose>
+            </div>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
       {/* Roast Limit Warning Drawer */}
       <Drawer open={showLimitWarning} onOpenChange={setShowLimitWarning}>
         <DrawerContent className="border-2 border-foreground [&>div:first-child]:hidden">
-          {/* Custom handle - black, centered, properly positioned */}
           <div className="mx-auto mt-4 h-1 w-[100px] rounded-full bg-foreground" />
-          
           <DrawerHeader className="text-center px-6 py-8">
             <DrawerTitle className="text-2xl font-bold mb-6 text-center">
               🔒 Roast limit reached

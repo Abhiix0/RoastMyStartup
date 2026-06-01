@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { RetroUICard } from "@/components/retroui/card";
 import { Flame } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 interface ColdStartLoaderProps {
   onReady: () => void;
 }
-
-const API_BASE_URL = "https://roast-my-startup-api.onrender.com";
 
 export function ColdStartLoader({ onReady }: ColdStartLoaderProps) {
   const [progress, setProgress] = useState(0);
