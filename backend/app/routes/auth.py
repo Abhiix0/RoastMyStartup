@@ -9,7 +9,7 @@ This module handles server-side Google OAuth flow:
 
 import os
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import requests
 import jwt
@@ -77,7 +77,7 @@ def create_jwt_token(user_id: str, email: str, name: str, provider: str = "googl
     Returns:
         JWT token string
     """
-    expiration = datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
+    expiration = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
     
     payload = {
         "user_id": user_id,

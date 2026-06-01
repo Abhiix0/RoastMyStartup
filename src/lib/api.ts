@@ -61,3 +61,27 @@ export async function generateRoast(
 
   return response.json();
 }
+
+export interface UserRoast {
+  id: string;
+  startup_name: string;
+  roast_level: string;
+  brutal_roast: string;
+  created_at: string;
+}
+
+export async function getUserRoasts(token: string): Promise<UserRoast[]> {
+  const response = await fetch(`${API_BASE_URL}/user/roasts`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch roasts: ${response.status}`);
+  }
+
+  return response.json();
+}

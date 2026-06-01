@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from supabase import create_client, Client
 
@@ -51,7 +51,7 @@ class DatabaseService:
                 "name": name,
                 "picture": picture,
                 "provider": provider,
-                "last_login": datetime.utcnow().isoformat(),
+                "last_login": datetime.now(timezone.utc).isoformat(),
             }
             
             logger.info(f"Upserting user to database: {email} (provider: {provider}, provider_id: {provider_id})")
@@ -106,7 +106,7 @@ class DatabaseService:
                 "user_id": user_id,
                 "provider": provider,
                 "success": True,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "ip_address": ip_address,
                 "user_agent": user_agent,
             }
@@ -179,7 +179,7 @@ class DatabaseService:
                 "user_id": user_id,
                 
                 # Metadata
-                "created_at": datetime.utcnow().isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
             }
             
             logger.info(f"Saving roast to database for startup: {request.startup_name} (user_id: {user_id or 'anonymous'})")
@@ -221,7 +221,7 @@ class DatabaseService:
             return {
                 "total_roasts": total_count,
                 "roast_levels": level_stats,
-                "last_updated": datetime.utcnow().isoformat()
+                "last_updated": datetime.now(timezone.utc).isoformat()
             }
             
         except Exception as e:

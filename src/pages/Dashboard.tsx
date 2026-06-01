@@ -4,15 +4,28 @@ import { RetroUIButton } from "@/components/retroui/button";
 import { Navbar } from "@/components/layout/Navbar";
 import { Skull } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getCurrentUser } from "@/lib/auth";
+import { useState, useEffect } from "react";
+import { getCurrentUser, getAuthToken } from "@/lib/auth";
+import { getUserRoasts, type UserRoast } from "@/lib/api";
 
 export default function Dashboard() {
   const user = getCurrentUser();
-  const roastCount = user?.roastCount || 0;
-  const hasReachedLimit = roastCount >= 6;
-  
-  // TODO: Replace with actual API call to fetch user's roasts
-  const userRoasts: any[] = [];
+  const hasReachedLimit = (user?.roastCount || 0) >= 6;
+
+  const [userRoasts, setUserRoasts] = useState<UserRoast[]>([]);
+  const [roastsLoading, setRoastsLoading] = useState(true);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) {
+      setRoastsLoading(false);
+      return;
+    }
+    getUserRoasts(token)
+      .then(setUserRoasts)
+      .catch(console.error)
+      .finally(() => setRoastsLoading(false));
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -32,7 +45,7 @@ export default function Dashboard() {
             {/* Usage Indicator */}
             <div className="mt-3">
               <p className="text-sm font-medium">
-                Roasts used: <span className="font-bold">{roastCount} / 6</span>
+                Roasts used: <span className="font-bold">{userRoasts.length} / 6</span>
               </p>
               {hasReachedLimit && (
                 <p className="text-sm text-muted-foreground mt-1">
@@ -48,15 +61,15 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
             <div className="bg-primary p-4 sm:p-6 border-2 border-foreground">
               <p className="text-xs sm:text-sm font-bold opacity-80">Total Roasts</p>
-              <p className="text-3xl sm:text-4xl md:text-5xl font-bold">{roastCount}</p>
+              <p className="text-3xl sm:text-4xl md:text-5xl font-bold">{userRoasts.length}</p>
             </div>
             <div className="bg-secondary text-secondary-foreground p-4 sm:p-6 border-2 border-foreground">
               <p className="text-xs sm:text-sm font-bold opacity-80">Avg Score</p>
-              <p className="text-3xl sm:text-4xl md:text-5xl font-bold">{roastCount > 0 ? "8.7" : "—"}</p>
+              <p className="text-3xl sm:text-4xl md:text-5xl font-bold">{userRoasts.length > 0 ? "8.7" : "—"}</p>
             </div>
             <div className="bg-muted p-4 sm:p-6 border-2 border-foreground">
               <p className="text-xs sm:text-sm font-bold opacity-80">Tears Shed</p>
-              <p className="text-3xl sm:text-4xl md:text-5xl font-bold">{roastCount > 0 ? "∞" : "0"}</p>
+              <p className="text-3xl sm:text-4xl md:text-5xl font-bold">{userRoasts.length > 0 ? "∞" : "0"}</p>
             </div>
           </div>
 
@@ -87,14 +100,14 @@ export default function Dashboard() {
                   key={roast.id}
                   className="border-2 border-black retroui-shadow bg-white p-6"
                 >
-                  <h3 className="text-xl font-bold mb-2">{roast.startupName}</h3>
+                  <h3 className="text-xl font-bold mb-2">{roast.startup_name}</h3>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-sm text-muted-foreground">{roast.date}</span>
+                    <span className="text-sm text-muted-foreground">{new Date(roast.created_at).toLocaleDateString()}</span>
                     <span className="text-sm font-bold">•</span>
-                    <span className="text-sm font-bold">{roast.roastLevel}</span>
+                    <span className="text-sm font-bold">{roast.roast_level}</span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-                    {roast.preview}
+                    {roast.brutal_roast}
                   </p>
                   <RetroUIButton variant="outline" size="sm" className="w-full">
                     View Roast
