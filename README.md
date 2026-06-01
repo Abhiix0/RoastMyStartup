@@ -1,4 +1,3 @@
-```markdown
 # RoastMyStartup
 
 Brutally honest AI feedback on startup ideas. Submit your idea, pick a roast intensity, and get unfiltered analysis across five dimensions: a direct roast, honest feedback, competitor reality check, survival tips, and a rewritten pitch.
