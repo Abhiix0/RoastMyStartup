@@ -1,135 +1,257 @@
-# RoastMyStartup — Backend
+# RoastMyStartup Backend
 
-FastAPI backend for RoastMyStartup. Handles AI roast generation via Google Gemini, Google OAuth, JWT authentication, and roast persistence in Supabase.
+FastAPI backend powering **RoastMyStartup**.
+
+Handles AI roast generation using Google Gemini, Google OAuth authentication, JWT-based authorization, rate limiting, and roast persistence through Supabase.
 
 ---
 
-## Stack
+## Features
 
-- Python 3.11+
-- FastAPI 0.104
-- Google Gemini (`gemini-2.5-flash`) via `google-generativeai`
-- Supabase (PostgreSQL) via `supabase-py`
-- Google OAuth 2.0 (server-side flow)
-- PyJWT for token signing
-- slowapi for rate limiting
-- tenacity for AI retry logic
+* AI-generated startup roasts using Gemini
+* Multiple roast intensity levels (Soft, Medium, Nuclear)
+* Google OAuth 2.0 authentication
+* JWT-based session management
+* Supabase PostgreSQL integration
+* User roast history tracking
+* Rate limiting with SlowAPI
+* Automatic AI retry logic using Tenacity
+* Swagger and ReDoc API documentation
+* Modern Python dependency management with UV
+
+---
+
+## Tech Stack
+
+| Category         | Technology            |
+| ---------------- | --------------------- |
+| Language         | Python 3.12+          |
+| Package Manager  | UV                    |
+| Framework        | FastAPI               |
+| AI Model         | Gemini 2.5 Flash      |
+| Database         | Supabase (PostgreSQL) |
+| Authentication   | Google OAuth 2.0      |
+| Token Management | PyJWT                 |
+| Rate Limiting    | SlowAPI               |
+| Retry Logic      | Tenacity              |
+
+---
+
+## Quick Commands
+
+```bash
+# Install dependencies
+uv sync
+
+# Start development server
+uv run uvicorn app.main:app --reload
+
+# Run tests
+uv run pytest
+
+# Lint code
+uv run ruff check .
+
+# Format code
+uv run black .
+```
 
 ---
 
 ## Project Structure
+
+```text
 backend/
 ├── app/
-│   ├── main.py              # App entry point, routes, middleware
+│   ├── main.py
+│   │
 │   ├── config/
-│   │   └── settings.py      # Pydantic settings, env var loading
+│   │   └── settings.py
+│   │
 │   ├── routes/
-│   │   └── auth.py          # Google OAuth endpoints
+│   │   └── auth.py
+│   │
 │   ├── schemas/
-│   │   └── roast.py         # RoastRequest and RoastResponse models
+│   │   └── roast.py
+│   │
 │   └── services/
-│       ├── roast_service.py  # Gemini AI generation with retry logic
-│       └── db_service.py     # Supabase CRUD operations
+│       ├── roast_service.py
+│       └── db_service.py
+│
 ├── tests/
 │   ├── test_api.py
 │   ├── test_gemini.py
 │   ├── test_hardened_service.py
 │   └── test_supabase_integration.py
-├── SUPABASE_MIGRATION.sql    # Run this once before first launch
-├── requirements.txt
+│
+├── pyproject.toml
+├── uv.lock
+├── SUPABASE_MIGRATION.sql
 └── .env.example
+```
+
+### Directory Overview
+
+| Path                        | Purpose                                                 |
+| --------------------------- | ------------------------------------------------------- |
+| `app/main.py`               | Application entry point, middleware, route registration |
+| `config/settings.py`        | Environment configuration and settings                  |
+| `routes/auth.py`            | Google OAuth endpoints                                  |
+| `schemas/roast.py`          | Request and response models                             |
+| `services/roast_service.py` | Gemini roast generation logic                           |
+| `services/db_service.py`    | Supabase database operations                            |
+| `tests/`                    | Unit and integration tests                              |
+| `pyproject.toml`            | Project dependencies and configuration                  |
+| `uv.lock`                   | Locked dependency versions                              |
+
 ---
 
-## Setup
+## Getting Started
 
-### 1. Create and activate a virtual environment
+### 1. Install UV
 
-```bash
-python -m venv .venv
+If you don't already have UV installed:
 
-# macOS/Linux
-source .venv/bin/activate
-
-# Windows
-.venv\Scripts\activate
-```
-
-### 2. Install dependencies
+**macOS / Linux**
 
 ```bash
-pip install -r requirements.txt
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### 3. Configure environment variables
+**Windows**
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Verify installation:
+
+```bash
+uv --version
+```
+
+---
+
+### 2. Configure Environment Variables
+
+Create a local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in all required values in `.env`. See the environment variables table below.
+Fill in all required environment variables before starting the server.
 
-### 4. Run the database migration
+---
 
-Before starting the server for the first time, run the migration against your Supabase project. Paste the contents of `SUPABASE_MIGRATION.sql` into the Supabase SQL editor and execute it.
+### 3. Install Dependencies
 
-This creates the `users`, `roasts`, and `login_events` tables with the correct schema, foreign keys, and indexes.
-
-### 5. Start the server
+UV automatically creates and manages the virtual environment.
 
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uv sync
+```
+
+Install development dependencies:
+
+```bash
+uv sync --all-groups
+```
+
+---
+
+### 4. Run Database Migration
+
+Before launching the backend for the first time:
+
+1. Open your Supabase project.
+2. Navigate to the SQL Editor.
+3. Copy the contents of:
+
+```text
+SUPABASE_MIGRATION.sql
+```
+
+4. Execute the migration.
+
+This creates:
+
+* `users`
+* `roasts`
+* `login_events`
+
+along with the required indexes and foreign key constraints.
+
+---
+
+### 5. Start the Development Server
+
+```bash
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Server will start at:
+
+```text
+http://localhost:8000
 ```
 
 ---
 
 ## Available URLs
 
-| URL | Description |
-|---|---|
-| `http://localhost:8000` | Root — confirms API is running |
-| `http://localhost:8000/health` | Health check — DB and model status |
-| `http://localhost:8000/docs` | Interactive API docs (Swagger UI) |
-| `http://localhost:8000/redoc` | Alternative API docs (ReDoc) |
+| URL                            | Description         |
+| ------------------------------ | ------------------- |
+| `http://localhost:8000`        | API root endpoint   |
+| `http://localhost:8000/health` | Health check        |
+| `http://localhost:8000/docs`   | Swagger UI          |
+| `http://localhost:8000/redoc`  | ReDoc documentation |
 
 ---
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `GEMINI_API_KEY` | Yes | Google Gemini API key |
-| `SUPABASE_URL` | Yes | Supabase project URL |
-| `SUPABASE_KEY` | Yes | Supabase anon or service key |
-| `GOOGLE_CLIENT_ID` | Yes | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Yes | Google OAuth client secret |
-| `GOOGLE_REDIRECT_URI` | Yes | Must match exactly what's registered in Google Cloud Console |
-| `JWT_SECRET_KEY` | Yes | Generate with `openssl rand -hex 32` |
-| `JWT_ALGORITHM` | No | Default: `HS256` |
-| `JWT_EXPIRATION_HOURS` | No | Default: `24` |
-| `FRONTEND_BASE_URL` | No | Used to construct the post-OAuth redirect URL. Default: `http://localhost:8080` |
-| `DEBUG` | No | Default: `False` |
+| Variable               | Required | Description                                   |
+| ---------------------- | -------- | --------------------------------------------- |
+| `GEMINI_API_KEY`       | Yes      | Google Gemini API key                         |
+| `SUPABASE_URL`         | Yes      | Supabase project URL                          |
+| `SUPABASE_KEY`         | Yes      | Supabase anon or service key                  |
+| `GOOGLE_CLIENT_ID`     | Yes      | Google OAuth client ID                        |
+| `GOOGLE_CLIENT_SECRET` | Yes      | Google OAuth client secret                    |
+| `GOOGLE_REDIRECT_URI`  | Yes      | Must match Google Cloud Console configuration |
+| `JWT_SECRET_KEY`       | Yes      | Generate using `openssl rand -hex 32`         |
+| `JWT_ALGORITHM`        | No       | Default: `HS256`                              |
+| `JWT_EXPIRATION_HOURS` | No       | Default: `24`                                 |
+| `FRONTEND_BASE_URL`    | No       | Frontend URL used after OAuth login           |
+| `DEBUG`                | No       | Default: `False`                              |
 
 ---
 
-## API Endpoints
+## API Reference
 
-### Public
+### Public Endpoints
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/health` | Returns `{ status: "alive", model, database }` |
-| `GET` | `/stats` | Returns aggregate roast counts by level |
-| `GET` | `/auth/google` | Redirects user to Google OAuth consent screen |
-| `GET` | `/auth/google/callback` | Handles OAuth callback, issues JWT, redirects to frontend |
+| Method | Endpoint                | Description                               |
+| ------ | ----------------------- | ----------------------------------------- |
+| `GET`  | `/health`               | Returns API, model, and database status   |
+| `GET`  | `/stats`                | Returns aggregate roast statistics        |
+| `GET`  | `/auth/google`          | Initiates Google OAuth login              |
+| `GET`  | `/auth/google/callback` | Handles OAuth callback and JWT generation |
 
-### Authenticated
+---
 
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `POST` | `/roast` | Optional Bearer | Generate a roast. Rate limited to 10 requests/min per IP. Authenticated users are limited to 6 free roasts, enforced server-side. |
-| `GET` | `/user/roasts` | Required Bearer | Returns the authenticated user's full roast history, ordered by date descending. |
+### Authenticated Endpoints
 
-### POST /roast — Request Body
+| Method | Endpoint       | Authentication        | Description           |
+| ------ | -------------- | --------------------- | --------------------- |
+| `POST` | `/roast`       | Optional Bearer Token | Generates a roast     |
+| `GET`  | `/user/roasts` | Required Bearer Token | Returns roast history |
+
+---
+
+### POST /roast
+
+#### Request Body
 
 ```json
 {
@@ -137,18 +259,30 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
   "idea_description": "string",
   "target_users": "string",
   "budget": "string",
-  "roast_level": "Soft" | "Medium" | "Nuclear"
+  "roast_level": "Soft"
 }
 ```
 
-### POST /roast — Response
+Valid roast levels:
+
+```text
+Soft
+Medium
+Nuclear
+```
+
+---
+
+#### Response
 
 ```json
 {
   "brutal_roast": "string",
   "honest_feedback": "string",
   "competitor_reality_check": "string",
-  "survival_tips": ["string"],
+  "survival_tips": [
+    "string"
+  ],
   "pitch_rewrite": "string"
 }
 ```
@@ -157,27 +291,126 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ## Authentication Flow
 
+```text
+Frontend
+   │
+   ▼
+GET /auth/google
+   │
+   ▼
+Google OAuth Consent Screen
+   │
+   ▼
+GET /auth/google/callback
+   │
+   ▼
+Backend Exchanges Code
+   │
+   ▼
+Fetch Google Profile
+   │
+   ▼
+Upsert User in Supabase
+   │
+   ▼
+Generate JWT
+   │
+   ▼
+Redirect to Frontend
+```
+
+### Detailed Flow
+
 1. Frontend redirects user to `GET /auth/google`
-2. Backend redirects user to Google's OAuth consent screen
-3. Google redirects back to `GET /auth/google/callback` with an authorization code
-4. Backend exchanges the code for a Google access token, fetches the user's profile, upserts the user in Supabase, and issues a signed JWT
-5. Backend redirects to `{FRONTEND_BASE_URL}/auth/callback?token=<jwt>`
-6. Frontend stores the JWT in `localStorage` and uses it as `Authorization: Bearer <token>` on subsequent requests
+2. Backend redirects user to Google OAuth
+3. User completes authentication
+4. Google redirects back with authorization code
+5. Backend exchanges code for access token
+6. User profile is fetched from Google
+7. User is created or updated in Supabase
+8. JWT token is generated
+9. Backend redirects to:
+
+```text
+{FRONTEND_BASE_URL}/auth/callback?token=<jwt>
+```
+
+10. Frontend stores JWT and sends:
+
+```http
+Authorization: Bearer <token>
+```
+
+on future requests.
 
 ---
 
 ## Roast Levels
 
-| Level | Behavior |
-|---|---|
-| Soft | Constructive, encouraging tone with light critique |
-| Medium | Direct, VC-style feedback without sugarcoating |
-| Nuclear | Ruthless, sarcastic — no mercy |
+| Level   | Description                                                |
+| ------- | ---------------------------------------------------------- |
+| Soft    | Constructive and encouraging feedback with light criticism |
+| Medium  | Direct startup and VC-style analysis                       |
+| Nuclear | Brutally honest, sarcastic, and ruthless feedback          |
 
 ---
 
 ## Rate Limiting
 
-The `/roast` endpoint is rate limited to **10 requests per minute per IP address** using slowapi. Exceeding the limit returns `HTTP 429 Too Many Requests`.
+### IP-Based Limit
 
-Additionally, authenticated users are limited to **6 free roasts** total, checked against the database on every request.
+The `/roast` endpoint is limited to:
+
+```text
+10 requests per minute per IP address
+```
+
+Exceeding the limit returns:
+
+```http
+429 Too Many Requests
+```
+
+---
+
+### Free Roast Limit
+
+Authenticated users are limited to:
+
+```text
+6 free roasts
+```
+
+The limit is enforced server-side and validated against the database on every request.
+
+---
+
+## Testing
+
+Run all tests:
+
+```bash
+uv run pytest
+```
+
+Run a specific test file:
+
+```bash
+uv run pytest tests/test_api.py
+```
+
+---
+
+## API Documentation
+
+Swagger UI:
+
+```text
+http://localhost:8000/docs
+```
+
+ReDoc:
+
+```text
+http://localhost:8000/redoc
+```
