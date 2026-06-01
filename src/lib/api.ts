@@ -2,6 +2,8 @@
  * API client for RoastMyStartup backend
  */
 
+import { getAuthToken } from "./auth";
+
 export interface RoastRequest {
   startup_name: string;
   idea_description: string;
@@ -18,7 +20,7 @@ export interface RoastResponse {
   survival_tips: string[];
 }
 
-const API_BASE_URL = "https://roast-my-startup-api.onrender.com";
+export const API_BASE_URL = "https://roast-my-startup-api.onrender.com";
 
 /**
  * OAuth endpoints
@@ -36,11 +38,17 @@ export const OAUTH_ENDPOINTS = {
 export async function generateRoast(
   request: RoastRequest
 ): Promise<RoastResponse> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${API_BASE_URL}/roast`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify(request),
   });
 
@@ -49,6 +57,30 @@ export async function generateRoast(
     throw new Error(
       `Failed to generate roast: ${response.status} ${response.statusText}. ${errorText}`
     );
+  }
+
+  return response.json();
+}
+
+export interface UserRoast {
+  id: string;
+  startup_name: string;
+  roast_level: string;
+  brutal_roast: string;
+  created_at: string;
+}
+
+export async function getUserRoasts(token: string): Promise<UserRoast[]> {
+  const response = await fetch(`${API_BASE_URL}/user/roasts`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch roasts: ${response.status}`);
   }
 
   return response.json();

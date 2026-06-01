@@ -9,7 +9,7 @@ This module handles server-side Google OAuth flow:
 
 import os
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import requests
 import jwt
@@ -77,7 +77,7 @@ def create_jwt_token(user_id: str, email: str, name: str, provider: str = "googl
     Returns:
         JWT token string
     """
-    expiration = datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
+    expiration = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
     
     payload = {
         "user_id": user_id,
@@ -216,6 +216,8 @@ async def google_callback(request: Request, code: Optional[str] = None, error: O
         logger.info(f"Successfully authenticated user: {email} (provider_id: {provider_id})")
         
         # Persist user to database (upsert to handle returning users)
+        # Initialize user_id before the database try block
+        user_id = None
         try:
             from app.services.db_service import db_service
             user_id = db_service.upsert_user(
@@ -239,7 +241,7 @@ async def google_callback(request: Request, code: Optional[str] = None, error: O
             logger.error(f"Failed to persist user {email} to database: {str(db_error)}")
         
         # Generate JWT token
-        jwt_token = create_jwt_token(user_id=user_id, email=email, name=name, provider="google")
+        jwt_token = create_jwt_token(user_id=user_id or provider_id, email=email, name=name, provider="google")
         
         # Redirect to frontend with token
         callback_url = f"{FRONTEND_CALLBACK_URL}?token={jwt_token}"

@@ -35,24 +35,23 @@ export default function Result() {
   useEffect(() => {
     // Get roast data from navigation state
     const state = location.state as { roast?: RoastResponse } | null;
-    if (state?.roast) {
-      setRoastData(state.roast);
-      // Generate random scores
-      const newMetrics = metricLabels.map((label) => ({
-        label,
-        value: generateRandomScore(1, 10),
-        max: 10,
-      }));
-      setMetrics(newMetrics);
-      // Calculate average score
-      const average =
-        newMetrics.reduce((sum, m) => sum + m.value, 0) / newMetrics.length;
-      setRoastScore(Math.round(average * 10) / 10);
-    } else {
-      // If no data, redirect to roast page
+    if (!state?.roast) {
       navigate("/roast", { replace: true });
+      return;
     }
-  }, [location.state, navigate]);
+    setRoastData(state.roast);
+    // Generate random scores
+    const newMetrics = metricLabels.map((label) => ({
+      label,
+      value: generateRandomScore(1, 10),
+      max: 10,
+    }));
+    setMetrics(newMetrics);
+    // Calculate average score
+    const average =
+      newMetrics.reduce((sum, m) => sum + m.value, 0) / newMetrics.length;
+    setRoastScore(Math.round(average * 10) / 10);
+  }, []);
 
   // Show loading or redirect message if no data
   if (!roastData) {
