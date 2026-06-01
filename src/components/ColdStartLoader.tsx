@@ -11,34 +11,73 @@ export function ColdStartLoader({ onReady }: ColdStartLoaderProps) {
   const [progress, setProgress] = useState(0);
   const [backendReady, setBackendReady] = useState(false);
 
-  // Backend health check
+  // Backend health check — bounded retry loop with ad-blocker detection
   useEffect(() => {
+    let cancelled = false;
+    const MAX_RETRIES = 10;
+    const RETRY_INTERVAL_MS = 2000;
+
     const checkBackendHealth = async () => {
-      while (!backendReady) {
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        if (cancelled) return;
+
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s per-request timeout
+
           const response = await fetch(`${API_BASE_URL}/health`, {
             method: "GET",
-            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
           });
-          
+          clearTimeout(timeoutId);
+
           if (response.ok) {
             const data = await response.json();
-            if (data.status === "alive") {
+            if (data.status === "alive" && !cancelled) {
               setBackendReady(true);
               return;
             }
           }
-        } catch (error) {
-          // Silent retry - no error shown to user
+        } catch (error: unknown) {
+          // Detect browser block (ad blocker, privacy extension, CORS pre-flight block, etc.)
+          if (
+            error instanceof TypeError &&
+            (error.message.includes("Failed to fetch") ||
+              error.message.includes("ERR_BLOCKED_BY_CLIENT") ||
+              error.message.includes("NetworkError"))
+          ) {
+            console.warn(
+              "Health check blocked by browser extension. Skipping cold start check."
+            );
+            if (!cancelled) {
+              setBackendReady(true); // Unblock the app and let it proceed
+            }
+            return;
+          }
+          // AbortError (timeout) or other transient errors — continue retrying silently
         }
-        
-        // Wait 2 seconds before next attempt
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Wait before next attempt (skip wait on last attempt)
+        if (attempt < MAX_RETRIES && !cancelled) {
+          await new Promise((resolve) => setTimeout(resolve, RETRY_INTERVAL_MS));
+        }
+      }
+
+      // All retries exhausted — unblock the app rather than leaving the user stuck
+      if (!cancelled) {
+        console.warn(
+          "Backend health check timed out after max retries. Proceeding anyway."
+        );
+        setBackendReady(true);
       }
     };
 
     checkBackendHealth();
-  }, [backendReady]);
+
+    return () => {
+      cancelled = true; // Cleanup: prevent state updates after unmount
+    };
+  }, []); // Run once on mount only
 
   // Progress bar animation
   useEffect(() => {
