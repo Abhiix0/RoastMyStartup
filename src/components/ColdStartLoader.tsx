@@ -144,15 +144,9 @@ export function ColdStartLoader({ onReady }: ColdStartLoaderProps) {
           <div className="space-y-3">
             <div className="w-full bg-white border-2 border-black h-8 retroui-shadow overflow-hidden">
               <div
-                className="h-full bg-yellow-400 border-r-2 border-black transition-all duration-300 flex items-center justify-center"
+                className="h-full bg-yellow-400 border-r-2 border-black transition-all duration-300"
                 style={{ width: `${progress}%` }}
-              >
-                {progress > 10 && (
-                  <span className="text-xs font-bold text-black">
-                    {Math.floor(progress)}%
-                  </span>
-                )}
-              </div>
+              />
             </div>
 
             {/* Percentage Display */}
