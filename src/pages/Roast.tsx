@@ -524,7 +524,7 @@ export default function Roast() {
             <DrawerTitle className="text-2xl font-bold mb-6 text-center">
               ⚠️ Are you absolutely sure?
             </DrawerTitle>
-            <DrawerDescription className="text-lg mb-4 max-w-md mx-auto text-center text-justify">
+            <DrawerDescription className="text-lg mb-4 max-w-md mx-auto text-center">
               You're about to receive unfiltered, brutally honest feedback on your startup.
               This is not validation. This is not encouragement. Some lines may sting.
               Some may hurt a lot.
