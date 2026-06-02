@@ -105,14 +105,7 @@ async def get_user_roasts(authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
-        result = (
-            db_service.supabase.table("roasts")
-            .select("id, startup_name, roast_level, brutal_roast, created_at")
-            .eq("user_id", user_id)
-            .order("created_at", desc=True)
-            .execute()
-        )
-        return result.data or []
+        return db_service.get_roasts_by_user(user_id)
     except Exception as e:
         logger.error(f"Failed to fetch roasts for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch roast history")
