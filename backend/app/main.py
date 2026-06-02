@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="RoastMyStartup API",
     description="Backend API for RoastMyStartup application powered by Google Gemini with Supabase persistence",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Configure rate limiter
@@ -46,6 +46,7 @@ app.add_middleware(
 # Register routers
 app.include_router(auth_router)
 
+
 @app.on_event("startup")
 async def startup_event():
     """Startup event to validate configuration"""
@@ -57,12 +58,20 @@ async def startup_event():
     if db_service.health_check():
         logger.info("✅ Supabase database connection healthy")
     else:
-        logger.warning("⚠️ Supabase database connection failed - roasts will not be persisted")
+        logger.warning(
+            "⚠️ Supabase database connection failed - roasts will not be persisted"
+        )
+
 
 @app.get("/")
 async def root():
     """Root endpoint"""
-    return {"message": "Welcome to RoastMyStartup API", "powered_by": "Google Gemini", "database": "Supabase"}
+    return {
+        "message": "Welcome to RoastMyStartup API",
+        "powered_by": "Google Gemini",
+        "database": "Supabase",
+    }
+
 
 @app.get("/health")
 async def health_check():
@@ -71,8 +80,9 @@ async def health_check():
     return {
         "status": "alive",
         "model": settings.gemini_model,
-        "database": "healthy" if db_healthy else "unavailable"
+        "database": "healthy" if db_healthy else "unavailable",
     }
+
 
 @app.get("/stats")
 async def get_stats():
@@ -82,9 +92,9 @@ async def get_stats():
         return stats
     else:
         raise HTTPException(
-            status_code=503,
-            detail="Statistics unavailable - database connection issue"
+            status_code=503, detail="Statistics unavailable - database connection issue"
         )
+
 
 @app.get("/user/roasts")
 async def get_user_roasts(authorization: Optional[str] = Header(None)):
@@ -96,7 +106,7 @@ async def get_user_roasts(authorization: Optional[str] = Header(None)):
         payload = jwt.decode(
             token,
             settings.jwt_secret_key or "dummy_key",
-            algorithms=[settings.jwt_algorithm]
+            algorithms=[settings.jwt_algorithm],
         )
         user_id = payload.get("user_id")
     except jwt.ExpiredSignatureError:
@@ -105,21 +115,19 @@ async def get_user_roasts(authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
-        result = (
-            db_service.supabase.table("roasts")
-            .select("id, startup_name, roast_level, brutal_roast, created_at")
-            .eq("user_id", user_id)
-            .order("created_at", desc=True)
-            .execute()
-        )
-        return result.data or []
+        return db_service.get_roasts_by_user(user_id)
     except Exception as e:
         logger.error(f"Failed to fetch roasts for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch roast history")
 
+
 @app.post("/roast", response_model=RoastResponse)
 @limiter.limit("10/minute")
-async def roast_startup(request: Request, roast_request: RoastRequest, authorization: Optional[str] = Header(None)):
+async def roast_startup(
+    request: Request,
+    roast_request: RoastRequest,
+    authorization: Optional[str] = Header(None),
+):
     """
     Roast a startup idea with brutal honesty and constructive feedback.
 
@@ -148,17 +156,22 @@ async def roast_startup(request: Request, roast_request: RoastRequest, authoriza
                 token = authorization.replace("Bearer ", "")
                 payload = jwt.decode(
                     token,
-                    settings.jwt_secret_key or "dummy_key",  # Fallback for when JWT not configured
-                    algorithms=[settings.jwt_algorithm]
+                    settings.jwt_secret_key
+                    or "dummy_key",  # Fallback for when JWT not configured
+                    algorithms=[settings.jwt_algorithm],
                 )
                 user_id = payload.get("user_id")
                 logger.info(f"Authenticated user_id: {user_id}")
             except jwt.ExpiredSignatureError:
                 logger.warning("JWT token expired - proceeding as anonymous user")
             except jwt.InvalidTokenError as e:
-                logger.warning(f"Invalid JWT token: {str(e)} - proceeding as anonymous user")
+                logger.warning(
+                    f"Invalid JWT token: {str(e)} - proceeding as anonymous user"
+                )
             except Exception as e:
-                logger.warning(f"JWT decode error: {str(e)} - proceeding as anonymous user")
+                logger.warning(
+                    f"JWT decode error: {str(e)} - proceeding as anonymous user"
+                )
 
         # Enforce per-user roast limit server-side
         FREE_ROAST_LIMIT = 6
@@ -167,7 +180,7 @@ async def roast_startup(request: Request, roast_request: RoastRequest, authoriza
             if roast_count >= FREE_ROAST_LIMIT:
                 raise HTTPException(
                     status_code=403,
-                    detail="You have reached your free roast limit of 6. Please upgrade to continue."
+                    detail="You have reached your free roast limit of 6. Please upgrade to continue.",
                 )
 
         # Generate the roast using Gemini AI with retry logic
@@ -177,14 +190,22 @@ async def roast_startup(request: Request, roast_request: RoastRequest, authoriza
 
         # Save to database in the background (fail-safe - don't block user response)
         try:
-            db_result = db_service.save_roast(roast_request, roast_response, user_id=user_id)
+            db_result = db_service.save_roast(
+                roast_request, roast_response, user_id=user_id
+            )
             if db_result:
-                logger.info(f"✅ Roast for {roast_request.startup_name} saved to database")
+                logger.info(
+                    f"✅ Roast for {roast_request.startup_name} saved to database"
+                )
             else:
-                logger.warning(f"⚠️ Failed to save roast for {roast_request.startup_name} to database")
+                logger.warning(
+                    f"⚠️ Failed to save roast for {roast_request.startup_name} to database"
+                )
         except Exception as db_error:
             # Log the database error but don't raise - user must get their roast
-            logger.error(f"❌ Database save error for {roast_request.startup_name}: {str(db_error)}")
+            logger.error(
+                f"❌ Database save error for {roast_request.startup_name}: {str(db_error)}"
+            )
 
         return roast_response
 
@@ -194,8 +215,10 @@ async def roast_startup(request: Request, roast_request: RoastRequest, authoriza
 
     except Exception as e:
         # Handle any unexpected errors not caught by the service
-        logger.error(f"Unexpected error in roast endpoint for {roast_request.startup_name}: {str(e)}")
+        logger.error(
+            f"Unexpected error in roast endpoint for {roast_request.startup_name}: {str(e)}"
+        )
         raise HTTPException(
             status_code=500,
-            detail="An unexpected error occurred while processing your roast request. Please try again."
+            detail="An unexpected error occurred while processing your roast request. Please try again.",
         )
